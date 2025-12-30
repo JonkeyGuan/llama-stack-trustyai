@@ -6,6 +6,19 @@ WORKDIR /opt/app-root
 
 # Switch to root for package installation
 USER root
+# ENV HOME=/root
+ENV CARGO_HOME=/root/.cargo
+ENV RUSTUP_HOME=/root/.rustup
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN dnf install -y --allowerasing \
+    gcc gcc-c++ make openssl-devel libffi-devel python3-devel curl ca-certificates \
+ && curl https://sh.rustup.rs -sSf | sh -s -- -y \
+ && /root/.cargo/bin/rustup toolchain install stable \
+ && /root/.cargo/bin/rustup default stable
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
 RUN pip install sqlalchemy # somehow sqlalchemy[asyncio] is not sufficient
 RUN pip install \
     aiosqlite \
@@ -30,7 +43,7 @@ RUN pip install \
     pandas \
     pillow \
     psycopg2-binary \
-    pymilvus \
+    "pymilvus[milvus_lite]" \
     pymongo \
     pypdf \
     redis \
@@ -51,9 +64,5 @@ USER 1001
 RUN mkdir -p ${HOME}/.llama/providers.d ${HOME}/.cache
 COPY trustyai-distribution/run.yaml ${APP_ROOT}/run.yaml
 COPY trustyai-distribution/providers.d/ ${HOME}/.llama/providers.d/
-
-USER root
-RUN chmod -R g+rwX /opt/app-root
-USER 1001
 
 ENTRYPOINT ["python", "-m", "llama_stack.distribution.server.server", "--config", "/opt/app-root/run.yaml"]
