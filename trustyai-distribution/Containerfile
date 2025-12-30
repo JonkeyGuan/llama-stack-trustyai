@@ -65,4 +65,8 @@ RUN mkdir -p ${HOME}/.llama/providers.d ${HOME}/.cache
 COPY trustyai-distribution/run.yaml ${APP_ROOT}/run.yaml
 COPY trustyai-distribution/providers.d/ ${HOME}/.llama/providers.d/
 
+USER root
+RUN chmod -R g+rwX /opt/app-root
+USER 1001
+
 ENTRYPOINT ["python", "-m", "llama_stack.distribution.server.server", "--config", "/opt/app-root/run.yaml"]
